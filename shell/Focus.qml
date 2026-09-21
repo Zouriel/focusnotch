@@ -52,7 +52,9 @@ Singleton {
     readonly property int planTotal: root.plan.reduce((a, p) => a + p.secs, 0)
     readonly property int planElapsed: {
         let done = 0;
-        for (let i = 0; i < root.phase; i++)
+        // Bounded by the plan as well as by phase: this binding re-runs during
+        // a rebuild, when the two can momentarily disagree.
+        for (let i = 0; i < root.phase && i < root.plan.length; i++)
             done += root.plan[i].secs;
         return done + Math.max(0, root.current.secs - root.remaining);
     }
@@ -110,8 +112,10 @@ Singleton {
     }
 
     function rebuild(): void {
-        root.plan = root.buildPlan();
+        // Rewind first. Assigning a shorter plan while phase still points into
+        // the old longer one leaves bindings reading past its end.
         root.phase = 0;
+        root.plan = root.buildPlan();
         root.remaining = root.plan[0].secs;
         root.finished = false;
     }
