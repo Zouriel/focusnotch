@@ -29,5 +29,10 @@
     "minSessionMinutes": 30,
     "everyMinutes": 20,
     "lengthMinutes": 5
+  },
+  "breakOverlay": {
+    "enabled": true,
+    "dimOpacity": 0.6,
+    "backToWorkSeconds": 6
   }
 }

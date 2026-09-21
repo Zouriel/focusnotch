@@ -114,6 +114,36 @@ There is never a break after the last block, and a stub final block is folded
 into the one before it — 45 becomes `20 + 25` rather than `20 + 20 + 5`, since
 taking a five minute break to then work five minutes is silly.
 
+### The break screen
+
+When a break starts it takes over the screen: everything dims, and a large card
+says what happened, how long you have, and gives you **Skip break**. A chime on
+its own is far too easy to miss, and missing the start of a break defeats the
+point of having one.
+
+It is a nudge, not a cage. Click anywhere, press **Dismiss**, or run
+`qs -c focusnotch ipc call focus dismiss` and it goes away while the break
+carries on underneath — the notch keeps the countdown in the break colour.
+
+If you never dismissed it, the screen turns into a short "Back to it" card when
+the break runs out and clears itself after a few seconds, so walking away and
+coming back still tells you where you are. If you *did* dismiss it, you are
+evidently already working and get no popup.
+
+```json
+"breakOverlay": { "enabled": true, "dimOpacity": 0.6, "backToWorkSeconds": 6 }
+```
+
+Set `enabled` to `false` for the chime and notch alone. To see either card
+without waiting for a real break:
+
+```sh
+qs -c focusnotch ipc call focus preview        # the break screen
+qs -c focusnotch ipc call focus previewBack    # the back-to-work card
+```
+
+### At a glance
+
 While a session runs, the notch shows which block you are on (`2/3`), and the
 progress hairline becomes one segment per phase — long work runs separated by
 short break gaps, each filling as it plays out. Breaks are drawn in their own
@@ -201,6 +231,7 @@ Keys: `notchBg`, `onSurface`, `onSurfaceVariant`, `outline`, `primary`,
 | `minWidth` | `250` | minimum collapsed width |
 | `showSeconds` | `false` | seconds on the clock |
 | `breaks` | see above | `minSessionMinutes`, `everyMinutes`, `lengthMinutes` |
+| `breakOverlay` | see above | `enabled`, `dimOpacity`, `backToWorkSeconds` |
 | `alarmVolume` | `0.55` | chime volume, 0–1 |
 | `alarmCommand` | `[]` | override the alarm player; `{}` is the sound file |
 | `notify` | `true` | desktop notification on completion |
@@ -225,6 +256,8 @@ qs -c focusnotch ipc call focus set 45       # any number of minutes
 qs -c focusnotch ipc call focus reset
 qs -c focusnotch ipc call focus breaks toggle
 qs -c focusnotch ipc call focus skip          # end a break early
+qs -c focusnotch ipc call focus dismiss       # hide the break screen
+qs -c focusnotch ipc call focus preview       # see the break screen
 qs -c focusnotch ipc call focus music toggle
 qs -c focusnotch ipc call notch state        # hidden / cursor / edge mode
 ```
@@ -242,6 +275,7 @@ bind = SUPER SHIFT, F, exec, qs -c focusnotch ipc call focus toggle
 | `shell/Notch.qml` | the layer-shell window: geometry, hide logic, layout |
 | `shell/Focus.qml` | the session: the work/break plan, countdown, cues, persistence |
 | `shell/Music.qml` | mpv lifecycle and the playlist file |
+| `shell/BreakOverlay.qml` | the full-screen break card |
 | `shell/Theme.qml` | palette, fonts and config, all live-reloaded |
 | `config/cursor-watch.py` | streams the cursor position from Hyprland's IPC |
 | `config/mpvctl.py` | mpv JSON IPC client: titles, pause, fade-out |

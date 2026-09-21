@@ -60,6 +60,23 @@ Singleton {
     }
 
     readonly property bool active: root.running || root.phase > 0 || root.remaining < root.current.secs
+
+    // Break screen state. Dismissing hides the screen but leaves the break
+    // running: it is a nudge, not a cage.
+    property bool breakDismissed: false
+    // Brief "back to it" card, shown only if you were still on the break
+    // screen when the break ran out.
+    property bool backToWork: false
+    property bool previewing: false
+
+    readonly property bool showBreakScreen: Theme.opt("breakOverlay", {}).enabled !== false && (root.previewing || root.backToWork || (root.onBreak && !root.breakDismissed))
+
+    function dismissBreakScreen(): void {
+        root.breakDismissed = true;
+        root.backToWork = false;
+        root.previewing = false;
+        backToWorkTimer.stop();
+    }
     readonly property real progress: root.planTotal > 0 ? root.planElapsed / root.planTotal : 0
 
     function fmt(secs: int): string {
@@ -157,6 +174,7 @@ Singleton {
 
     function reset(): void {
         root.running = false;
+        root.dismissBreakScreen();
         root.rebuild();
         Music.stop();
     }
@@ -191,9 +209,17 @@ Singleton {
         root.deadline = Date.now() + root.remaining * 1000;
 
         if (root.onBreak) {
+            root.breakDismissed = false;
+            root.backToWork = false;
             root.cue("break-start.wav");
             root.notify("Break time", `${Math.round(root.current.secs / 60)} minutes. Step away.`);
         } else {
+            // Only greet you back if you never dismissed the break screen --
+            // otherwise you are already working and do not want a popup.
+            if (!root.breakDismissed) {
+                root.backToWork = true;
+                backToWorkTimer.restart();
+            }
             root.cue("break-end.wav");
             root.notify("Back to it", `Block ${root.workBlockIndex} of ${root.workBlocks}.`);
         }
@@ -203,6 +229,7 @@ Singleton {
     function skip(): void {
         if (!root.onBreak)
             return;
+        root.breakDismissed = true;
         root.remaining = 0;
         root.advance();
         if (!root.running)
@@ -216,6 +243,8 @@ Singleton {
 
     function complete(): void {
         root.running = false;
+        root.backToWork = false;
+        backToWorkTimer.stop();
         root.remaining = 0;
         root.finished = true;
         root.cue("alarm.wav");
@@ -262,6 +291,21 @@ Singleton {
             if (left <= 0)
                 root.advance();
         }
+    }
+
+    Timer {
+        id: backToWorkTimer
+
+        interval: (Theme.opt("breakOverlay", {}).backToWorkSeconds ?? 6) * 1000
+        onTriggered: root.backToWork = false
+    }
+
+    // Preview the break screen without running a session.
+    Timer {
+        id: previewTimer
+
+        interval: 8000
+        onTriggered: root.previewing = false
     }
 
     // Stop glowing at me eventually.
@@ -314,6 +358,22 @@ Singleton {
             root.skip();
         }
 
+        function dismiss(): void {
+            root.dismissBreakScreen();
+        }
+
+        // See what the break screen looks like without waiting for one.
+        function preview(): void {
+            root.previewing = true;
+            previewTimer.restart();
+        }
+
+        // ...and the card you get when the break runs out.
+        function previewBack(): void {
+            root.backToWork = true;
+            backToWorkTimer.restart();
+        }
+
         function music(on: string): void {
             Music.enabled = on === "toggle" ? !Music.enabled : (on === "on" || on === "1" || on === "true");
         }
@@ -325,6 +385,9 @@ Singleton {
                 running: root.running,
                 finished: root.finished,
                 onBreak: root.onBreak,
+                breakScreen: root.showBreakScreen,
+                breakDismissed: root.breakDismissed,
+                backToWork: root.backToWork,
                 breaks: root.breaksEnabled,
                 breaksApply: root.breaksApply,
                 block: `${root.workBlockIndex}/${root.workBlocks}`,

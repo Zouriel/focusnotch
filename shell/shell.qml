@@ -9,4 +9,10 @@ ShellRoot {
 
         Notch {}
     }
+
+    Variants {
+        model: Quickshell.screens
+
+        BreakOverlay {}
+    }
 }
