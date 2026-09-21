@@ -1,0 +1,82 @@
+name: Windows build
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+  pull_request:
+    paths: ["windows/**", ".github/workflows/windows.yml"]
+
+# Needed to attach the binaries to a release.
+permissions:
+  contents: write
+
+jobs:
+  build:
+    # Built on a real Windows runner rather than cross-compiled, so the
+    # published binary is the one the toolchain actually intends.
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        working-directory: windows
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: windows/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check syntax
+        run: |
+          node --check src/main.js
+          node --check src/preload.js
+          node --check src/lib/session.js
+          node --check src/lib/config.js
+          node --check src/lib/music.js
+          node --check src/renderer/notch.js
+          node --check src/renderer/overlay.js
+          node --check src/renderer/player.js
+
+      - name: Verify the break plan
+        # The one piece of real logic worth guarding: a break must never land
+        # at the start or end of a session, and the duration you pick must
+        # stay focus time.
+        run: node test/plan.test.js
+
+      - name: Build
+        run: npx electron-builder --win --publish never
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FocusNotch-windows
+          path: |
+            windows/dist/*.exe
+            windows/dist/*.blockmap
+          if-no-files-found: error
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "Focus Notch ${GITHUB_REF_NAME}" \
+            --notes "Windows build of focusnotch.
+
+          **FocusNotch-*-setup.exe** installs it and can start with Windows.
+          **FocusNotch-*-portable.exe** just runs, no install.
+
+          The binaries are unsigned, so SmartScreen will warn on first run:
+          More info -> Run anyway. Built from this tag by GitHub Actions; the
+          run is public and linked on the Actions tab if you want to check it." \
+            dist/*.exe || \
+          gh release upload "${GITHUB_REF_NAME}" dist/*.exe --repo "${GITHUB_REPOSITORY}" --clobber

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'" />
+    <title>Break</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="overlay.css" />
+  </head>
+  <body>
+    <div class="scrim" id="scrim">
+      <div class="card" id="card">
+        <span class="icon big" id="cardIcon">local_cafe</span>
+        <h1 id="title">Break time</h1>
+        <p class="sub" id="sub"></p>
+        <div class="count" id="count">00:00</div>
+        <div class="bar" id="bar"><i id="barFill"></i></div>
+        <div class="actions">
+          <button class="obtn" id="skipBtn"><span class="icon">skip_next</span><span>Skip break</span></button>
+          <button class="obtn primary" id="dismissBtn"><span class="icon">close</span><span id="dismissLabel">Dismiss</span></button>
+        </div>
+        <p class="hint">click anywhere to dismiss</p>
+      </div>
+    </div>
+    <script src="overlay.js"></script>
+  </body>
+</html>

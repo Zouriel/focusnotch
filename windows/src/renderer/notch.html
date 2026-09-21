@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; media-src 'self' file:; style-src 'self' 'unsafe-inline'" />
+    <title>Focus Notch</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="notch.css" />
+  </head>
+  <body>
+    <!-- The window is a fixed transparent sheet; this is the notch. -->
+    <div id="notch" class="notch">
+      <div class="top-row" id="topRow">
+        <span class="clock" id="clock">--:--</span>
+        <span class="sep" data-timer>·</span>
+        <span class="icon phase-icon" data-timer id="phaseIcon">hourglass_bottom</span>
+        <span class="countdown" data-timer id="countdown">00:00</span>
+        <span class="blocks" data-timer id="blocks"></span>
+        <span class="icon note" id="note">music_note</span>
+      </div>
+
+      <div class="controls" id="controls">
+        <div class="date" id="date"></div>
+
+        <div class="row chips" id="chips"></div>
+
+        <div class="plan" id="plan"></div>
+
+        <div class="row buttons">
+          <button class="btn primary" id="startBtn">
+            <span class="icon" id="startIcon">play_arrow</span><span id="startLabel">Start</span>
+          </button>
+          <button class="btn round" id="resetBtn" title="Reset"><span class="icon">replay</span></button>
+          <button class="btn" id="skipBtn" hidden>
+            <span class="icon">skip_next</span><span>Skip</span>
+          </button>
+          <button class="btn music" id="musicBtn">
+            <span class="icon" id="musicBox">check_box_outline_blank</span><span id="musicLabel">Music</span>
+          </button>
+          <button class="btn round" id="editBtn" title="Edit playlist"><span class="icon">edit_note</span></button>
+        </div>
+      </div>
+
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <script src="notch.js"></script>
+  </body>
+</html>

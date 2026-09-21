@@ -1,0 +1,64 @@
+{
+  "name": "focusnotch",
+  "productName": "Focus Notch",
+  "version": "1.0.0",
+  "description": "A MacBook-style notch for Windows: clock, focus timer, breaks and background music.",
+  "main": "src/main.js",
+  "author": "Zouriel",
+  "license": "MIT",
+  "homepage": "https://github.com/Zouriel/focusnotch",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Zouriel/focusnotch.git"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never",
+    "dist:dir": "electron-builder --win --dir --publish never",
+    "cues": "python3 ../config/gen-alarm.py assets"
+  },
+  "devDependencies": {
+    "electron": "44.4.3",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "dev.zouriel.focusnotch",
+    "productName": "Focus Notch",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "artifactName": "FocusNotch-${version}-${arch}.${ext}"
+    },
+    "portable": {
+      "artifactName": "FocusNotch-${version}-portable.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "artifactName": "FocusNotch-${version}-setup.exe"
+    }
+  }
+}

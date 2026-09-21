@@ -39,6 +39,16 @@ desktop environment required — it is a layer-shell surface and nothing else.
 - **Stays out of the way.** Hides when a window goes fullscreen, and when you
   put the cursor in the absolute top edge of the screen.
 
+## Windows
+
+There is a Windows build: an Electron rewrite that behaves the same way, in
+[`windows/`](windows/), with binaries on the
+[Releases page](https://github.com/Zouriel/focusnotch/releases). The session
+logic is a direct port, so both platforms produce identical break plans. See
+[windows/README.md](windows/README.md).
+
+The rest of this file is the Linux version.
+
 ## Requirements
 
 **Required**

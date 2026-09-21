@@ -1,0 +1,114 @@
+.scrim {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, var(--dim, 0.6));
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+.scrim.shown { opacity: 1; }
+
+.card {
+  width: min(calc(560px * var(--scale)), 80vw);
+  padding: calc(34px * var(--scale)) calc(28px * var(--scale));
+  border-radius: calc(28px * var(--scale));
+  background: var(--notch-bg);
+  border: 1px solid color-mix(in srgb, var(--break) 35%, transparent);
+  text-align: center;
+  transform: scale(0.94);
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), border-color 300ms ease;
+}
+
+.scrim.shown .card { transform: scale(1); }
+
+.scrim.greeting .card { border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+
+.big {
+  font-size: calc(52px * var(--scale));
+  color: var(--break);
+  display: block;
+}
+
+.scrim.greeting .big { color: var(--accent); }
+
+h1 {
+  margin-top: calc(14px * var(--scale));
+  font-size: calc(30px * var(--scale));
+  font-weight: 600;
+}
+
+.sub {
+  margin-top: calc(10px * var(--scale));
+  color: var(--subtext);
+  font-size: calc(14px * var(--scale));
+}
+
+.count {
+  margin-top: calc(18px * var(--scale));
+  font-size: calc(72px * var(--scale));
+  font-weight: 300;
+  color: var(--break);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+
+.bar {
+  margin: calc(14px * var(--scale)) auto 0;
+  width: 70%;
+  height: calc(3px * var(--scale));
+  border-radius: 999px;
+  background: rgba(141, 145, 152, 0.25);
+  overflow: hidden;
+}
+
+.bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--break);
+  transition: width 400ms ease-out;
+}
+
+.scrim.greeting .count,
+.scrim.greeting .bar { display: none; }
+
+.actions {
+  margin-top: calc(22px * var(--scale));
+  display: flex;
+  justify-content: center;
+  gap: calc(10px * var(--scale));
+}
+
+.obtn {
+  height: calc(40px * var(--scale));
+  padding: 0 calc(15px * var(--scale));
+  border: none;
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--text);
+  font: inherit;
+  font-size: calc(14px * var(--scale));
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: calc(7px * var(--scale));
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.obtn:hover { background: var(--chip-hover); }
+
+.obtn .icon { font-size: calc(18px * var(--scale)); }
+
+/* Amber on a break, accent on the back-to-work card, so the button never
+   fights the rest of the card. */
+.obtn.primary { background: var(--break); color: var(--on-break); }
+.scrim.greeting .obtn.primary { background: var(--accent); color: var(--on-accent); }
+
+.hint {
+  margin-top: calc(12px * var(--scale));
+  color: color-mix(in srgb, var(--faint) 70%, transparent);
+  font-size: calc(10px * var(--scale));
+}
