@@ -1,0 +1,28 @@
+{
+  "scale": 1.0,
+
+  "presets": [5, 10, 15, 30, 60, 90],
+  "defaultMinutes": 30,
+  "minWidth": 250,
+  "showSeconds": false,
+
+  "alarmVolume": 0.55,
+  "alarmCommand": [],
+  "notify": true,
+
+  "musicVolume": 45,
+  "editorCommand": [],
+
+  "edgeMode": "auto",
+  "topTriggerPx": 3,
+  "revealDelayMs": 150,
+  "cursorPollSeconds": 0.07,
+
+  "topEdgeOwner": "auto",
+  "topEdgeOwnerPollMs": 150,
+  "alwaysWatchTopEdge": false,
+
+  "hideOnFullscreen": true,
+
+  "colours": {}
+}

@@ -1,0 +1,11 @@
+# Focus music for the notch.
+#
+# One YouTube link per line. Livestreams and normal videos both work.
+# Everything after a "|" is used as a display label (optional).
+# Lines starting with "#" and blank lines are ignored.
+# The notch reloads this file the moment you save it.
+
+https://www.youtube.com/watch?v=jfKfPfyJRdk  | Lofi Girl - beats to relax/study to
+https://www.youtube.com/watch?v=4xDzrJKXOOY  | Lofi Girl - synthwave radio
+
+# Add your own below.
