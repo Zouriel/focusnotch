@@ -68,9 +68,14 @@ for f in config.json music.txt; do
     fi
 done
 
-if [ ! -f "$CONF_DIR/alarm.wav" ]; then
-    say "Generating the alarm chime"
-    python3 "$CONF_DIR/gen-alarm.py" "$CONF_DIR/alarm.wav"
+# alarm.wav = session done, break-start/break-end = the two break cues.
+missing_cue=
+for cue in alarm.wav break-start.wav break-end.wav; do
+    [ -f "$CONF_DIR/$cue" ] || missing_cue=1
+done
+if [ -n "$missing_cue" ]; then
+    say "Generating the cue sounds"
+    python3 "$CONF_DIR/gen-alarm.py" "$CONF_DIR"
 fi
 
 # ---- dependency report -----------------------------------------------------

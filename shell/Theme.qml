@@ -28,7 +28,9 @@ Singleton {
             onSurfaceVariant: "c3c6ce",
             outline: "8d9198",
             primary: "aac9f0",
-            onPrimary: "0e3252"
+            onPrimary: "0e3252",
+            tertiary: "ecbf80",
+            onTertiary: "442b00"
         })
 
     property var schemeColours: ({})
@@ -57,6 +59,9 @@ Singleton {
     readonly property color faint: root.col("outline", "#8d9198")
     readonly property color accent: root.col("primary", "#aac9f0")
     readonly property color onAccent: root.col("onPrimary", "#0e3252")
+    // Breaks get their own colour so work and rest never read the same.
+    readonly property color breakColour: root.col("tertiary", "#ecbf80")
+    readonly property color onBreakColour: root.col("onTertiary", "#442b00")
     readonly property color chipBg: Qt.rgba(1, 1, 1, 0.07)
     readonly property color chipBgHover: Qt.rgba(1, 1, 1, 0.13)
 

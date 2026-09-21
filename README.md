@@ -29,9 +29,11 @@ desktop environment required — it is a layer-shell surface and nothing else.
 - **Focus timer** with 5 / 10 / 15 / 30 / 60 / 90 minute presets. Once armed,
   the notch shows the countdown next to the clock and a progress hairline along
   its bottom edge.
+- **Optional breaks.** Longer sessions split themselves into work blocks with
+  short breaks between them. Off by default.
 - **A subtle alarm.** A soft two-note chime, not an alert tone, plus an
   optional desktop notification. The notch border glows and pulses until you
-  start something else.
+  start something else. Break transitions get their own quieter cues.
 - **Background music** from YouTube links you keep in a text file. Starting the
   timer starts the music, pausing pauses it, finishing fades it out over 2.5s.
 - **Stays out of the way.** Hides when a window goes fullscreen, and when you
@@ -77,6 +79,48 @@ Autostart it from your compositor:
 | Niri | `spawn-at-startup "qs" "-c" "focusnotch" "-n" "-d"` |
 
 Uninstall with `./install.sh --uninstall`.
+
+## Breaks
+
+Off by default. The coffee button at the end of the duration chips turns them
+on, and dims for sessions too short to be worth splitting.
+
+**The duration you pick is focus time, not elapsed time.** Choosing 60 gets you
+60 minutes of work; the breaks are added on top, so the session runs 70 minutes
+wall-clock. The chips keep meaning what they say, and the panel spells the plan
+out:
+
+```
+(5)(10)(15)(30)[60](90) (☕)
+  3 × 20 min · 5 min breaks · 70 min total
+```
+
+Defaults are a 5 minute break every 20 minutes, for sessions of 30 minutes or
+more:
+
+```json
+"breaks": { "minSessionMinutes": 30, "everyMinutes": 20, "lengthMinutes": 5 }
+```
+
+| Picked | Plan |
+| --- | --- |
+| 25 min | one 25 min block, no breaks (under the threshold) |
+| 30 min | 20 · break · 10 |
+| 45 min | 20 · break · 25 |
+| 60 min | 20 · break · 20 · break · 20 |
+| 90 min | 20 · break · 20 · break · 20 · break · 20 · break · 10 |
+
+There is never a break after the last block, and a stub final block is folded
+into the one before it — 45 becomes `20 + 25` rather than `20 + 20 + 5`, since
+taking a five minute break to then work five minutes is silly.
+
+While a session runs, the notch shows which block you are on (`2/3`), and the
+progress hairline becomes one segment per phase — long work runs separated by
+short break gaps, each filling as it plays out. Breaks are drawn in their own
+colour so work and rest never read the same. A **Skip** button appears in the
+panel only while a break is actually running.
+
+Music keeps playing through breaks; only the end of the session fades it out.
 
 ## Music
 
@@ -156,6 +200,7 @@ Keys: `notchBg`, `onSurface`, `onSurfaceVariant`, `outline`, `primary`,
 | `defaultMinutes` | `30` | first-run selection |
 | `minWidth` | `250` | minimum collapsed width |
 | `showSeconds` | `false` | seconds on the clock |
+| `breaks` | see above | `minSessionMinutes`, `everyMinutes`, `lengthMinutes` |
 | `alarmVolume` | `0.55` | chime volume, 0–1 |
 | `alarmCommand` | `[]` | override the alarm player; `{}` is the sound file |
 | `notify` | `true` | desktop notification on completion |
@@ -178,6 +223,8 @@ qs -c focusnotch ipc call focus status
 qs -c focusnotch ipc call focus toggle       # start / pause
 qs -c focusnotch ipc call focus set 45       # any number of minutes
 qs -c focusnotch ipc call focus reset
+qs -c focusnotch ipc call focus breaks toggle
+qs -c focusnotch ipc call focus skip          # end a break early
 qs -c focusnotch ipc call focus music toggle
 qs -c focusnotch ipc call notch state        # hidden / cursor / edge mode
 ```
@@ -193,20 +240,21 @@ bind = SUPER SHIFT, F, exec, qs -c focusnotch ipc call focus toggle
 | | |
 | --- | --- |
 | `shell/Notch.qml` | the layer-shell window: geometry, hide logic, layout |
-| `shell/Focus.qml` | the session: countdown, chime, notification, persistence |
+| `shell/Focus.qml` | the session: the work/break plan, countdown, cues, persistence |
 | `shell/Music.qml` | mpv lifecycle and the playlist file |
 | `shell/Theme.qml` | palette, fonts and config, all live-reloaded |
 | `config/cursor-watch.py` | streams the cursor position from Hyprland's IPC |
 | `config/mpvctl.py` | mpv JSON IPC client: titles, pause, fade-out |
 | `config/play-alarm.sh` | picks whichever audio player exists |
-| `config/gen-alarm.py` | writes the chime as a WAV, no audio libraries needed |
+| `config/gen-alarm.py` | writes the three cue sounds as WAVs, no audio libraries needed |
 
 The notch shape is a rectangle offset upward by exactly its own corner radius
 inside a clipping parent, so the top corners are cropped away and the bottom
 two stay round.
 
-Duration and the music tick persist to `~/.local/state/focusnotch/state.json`.
-A running countdown does not: restarting the shell clears it.
+Duration, the music tick and the breaks tick persist to
+`~/.local/state/focusnotch/state.json`. A running countdown does not:
+restarting the shell clears it.
 
 ## Known limitations
 

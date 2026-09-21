@@ -333,8 +333,14 @@ PanelWindow {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: Focus.active || Focus.finished
-                    text: Focus.finished ? "timer_off" : (Focus.running ? "hourglass_bottom" : "pause")
-                    color: Theme.accent
+                    text: {
+                        if (Focus.finished)
+                            return "timer_off";
+                        if (Focus.onBreak)
+                            return "local_cafe";
+                        return Focus.running ? "hourglass_bottom" : "pause";
+                    }
+                    color: Focus.onBreak && !Focus.finished ? Theme.breakColour : Theme.accent
                     font.family: Theme.fontIcon
                     font.pixelSize: Theme.px(14)
                 }
@@ -343,10 +349,20 @@ PanelWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: Focus.active || Focus.finished
                     text: Focus.finished ? "done" : Focus.fmt(Focus.remaining)
-                    color: Theme.accent
+                    color: Focus.onBreak && !Focus.finished ? Theme.breakColour : Theme.accent
                     font.family: Theme.fontClock
                     font.pixelSize: Theme.px(15)
                     font.weight: Font.Medium
+                }
+
+                // Which block you are on, only when there is more than one.
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: Focus.active && !Focus.finished && Focus.workBlocks > 1
+                    text: `${Focus.workBlockIndex}/${Focus.workBlocks}`
+                    color: Theme.faint
+                    font.family: Theme.fontBody
+                    font.pixelSize: Theme.px(11)
                 }
 
                 Text {
@@ -399,6 +415,62 @@ PanelWindow {
                             onPicked: Focus.setMinutes(modelData)
                         }
                     }
+
+                    // Breaks. Sits with the durations because that is what it
+                    // depends on: it dims for sessions too short to split.
+                    Rectangle {
+                        id: breakToggle
+
+                        readonly property bool eligible: Focus.minutes * 60 >= Focus.breakMinSession
+                        readonly property bool lit: Focus.breaksEnabled && breakToggle.eligible
+
+                        implicitWidth: Theme.px(30)
+                        implicitHeight: Theme.px(24)
+                        radius: height / 2
+                        opacity: breakToggle.eligible ? 1 : 0.35
+                        color: breakToggle.lit ? Theme.breakColour : (breakHover.hovered ? Theme.chipBgHover : Theme.chipBg)
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 140
+                            }
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "local_cafe"
+                            color: breakToggle.lit ? Theme.onBreakColour : Theme.subtext
+                            font.family: Theme.fontIcon
+                            font.pixelSize: Theme.px(14)
+                        }
+
+                        HoverHandler {
+                            id: breakHover
+
+                            enabled: breakToggle.eligible
+                            cursorShape: Qt.PointingHandCursor
+                        }
+
+                        TapHandler {
+                            enabled: breakToggle.eligible
+                            onTapped: Focus.setBreaks(!Focus.breaksEnabled)
+                        }
+                    }
+                }
+
+                // What the plan actually is, so the chip's meaning stays clear:
+                // the duration is focus time, breaks are added on top.
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    visible: Focus.breaksApply
+                    text: {
+                        const mins = Math.round(Focus.planTotal / 60);
+                        const block = Math.round(Focus.plan[0].secs / 60);
+                        return `${Focus.workBlocks} \u00d7 ${block} min \u00b7 ${Math.round(Focus.breakLength / 60)} min breaks \u00b7 ${mins} min total`;
+                    }
+                    color: Theme.faint
+                    font.family: Theme.fontBody
+                    font.pixelSize: Theme.px(10)
                 }
 
                 Row {
@@ -420,6 +492,15 @@ PanelWindow {
                         icon: "replay"
                         enabled: Focus.active || Focus.finished
                         onClicked: Focus.reset()
+                    }
+
+                    // Only while a break is actually running: the row does not
+                    // carry a button you cannot use.
+                    IconButton {
+                        visible: Focus.onBreak && Focus.active
+                        icon: "skip_next"
+                        label: "Skip"
+                        onClicked: Focus.skip()
                     }
 
                     // Music tick. Disabled with a hint when mpv/yt-dlp or the
@@ -497,29 +578,65 @@ PanelWindow {
             }
 
             // ---- progress hairline along the bottom edge ----
-            Item {
-                width: parent.width - win.corner * 2
+            //
+            // One segment per phase, sized by its share of the session, so a
+            // split session reads at a glance: long work runs separated by
+            // short break gaps, each filling as it plays out.
+            Row {
+                id: progressBar
+
+                readonly property int usable: parent.width - win.corner * 2
+                readonly property int gap: Theme.px(3)
+                readonly property int slack: progressBar.gap * Math.max(0, Focus.plan.length - 1)
+
+                width: progressBar.usable
                 x: win.corner
                 height: Theme.px(2)
                 y: parent.height - height - Theme.px(3)
+                spacing: progressBar.gap
                 visible: Focus.active && !Focus.finished
 
-                Rectangle {
-                    anchors.fill: parent
-                    radius: height / 2
-                    color: Qt.alpha(Theme.faint, 0.25)
-                }
+                Repeater {
+                    model: Focus.plan
 
-                Rectangle {
-                    width: parent.width * Math.min(1, Math.max(0, Focus.progress))
-                    height: parent.height
-                    radius: height / 2
-                    color: Theme.accent
+                    Item {
+                        id: seg
 
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: 300
-                            easing.type: Easing.OutCubic
+                        required property int index
+                        required property var modelData
+
+                        readonly property bool isBreak: seg.modelData.kind === "break"
+                        // How much of this phase is behind us.
+                        readonly property real filled: {
+                            if (seg.index < Focus.phase)
+                                return 1;
+                            if (seg.index > Focus.phase)
+                                return 0;
+                            const total = seg.modelData.secs;
+                            return total > 0 ? Math.min(1, Math.max(0, (total - Focus.remaining) / total)) : 0;
+                        }
+
+                        width: Focus.planTotal > 0 ? (progressBar.usable - progressBar.slack) * (seg.modelData.secs / Focus.planTotal) : 0
+                        height: progressBar.height
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: height / 2
+                            color: Qt.alpha(Theme.faint, 0.25)
+                        }
+
+                        Rectangle {
+                            width: parent.width * seg.filled
+                            height: parent.height
+                            radius: height / 2
+                            color: seg.isBreak ? Theme.breakColour : Theme.accent
+
+                            Behavior on width {
+                                NumberAnimation {
+                                    duration: 300
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
                         }
                     }
                 }

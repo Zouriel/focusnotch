@@ -1,5 +1,5 @@
-# Generated at install time from gen-alarm.py
-config/alarm.wav
+# Cue sounds, generated at install time by config/gen-alarm.py
+config/*.wav
 
 *.pyc
 __pycache__/
