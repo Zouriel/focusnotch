@@ -31,9 +31,13 @@ pause, breaks, music, the config folder and quit.
 - **Hover the notch** for the panel: date, 5/10/15/30/60/90 chips, the breaks
   toggle, Start / Pause, Reset, the music tick and a button that opens the
   playlist.
-- **Put the cursor in the very top edge of the screen**, within the notch's own
-  width, and it slides away so you can reach what is under it. Move away and it
-  comes back.
+- **The notch stays put.** It does not hide itself. On Linux it ducks out of
+  the way so caelestia's top drawer can come down; Windows has nothing at the
+  top edge to yield to, so hiding would only ever lose you the notch. If you
+  want the gesture anyway, set `"hideOnTopEdge": true` and putting the cursor
+  in the very top row, within the notch's own width, slides it away until you
+  move off.
+- **Hide the notch** from the tray menu when you want it gone for a while.
 - **Breaks** split long sessions into work blocks. The duration you pick is
   focus time: 60 means 60 minutes of work, with breaks added on top. A break
   takes over the screen so you actually notice it; click anywhere to dismiss.
@@ -66,7 +70,8 @@ as the Linux build, minus the ones that only mean something on Wayland. See the
 | Key | Default | |
 | --- | --- | --- |
 | `startWithWindows` | `false` | also togglable from the tray |
-| `cursorPollMs` | `70` | how often the top-edge gesture is checked |
+| `hideOnTopEdge` | `false` | opt in to the top-edge hide gesture |
+| `cursorPollMs` | `70` | how often the gesture is checked, when enabled |
 
 ## Building it yourself
 

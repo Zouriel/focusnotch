@@ -1,7 +1,7 @@
 {
   "name": "focusnotch",
   "productName": "Focus Notch",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A MacBook-style notch for Windows: clock, focus timer, breaks and background music.",
   "main": "src/main.js",
   "author": "Zouriel",
@@ -15,7 +15,8 @@
     "start": "electron .",
     "dist": "electron-builder --win --publish never",
     "dist:dir": "electron-builder --win --dir --publish never",
-    "cues": "python3 ../config/gen-alarm.py assets"
+    "cues": "python3 ../config/gen-alarm.py assets",
+    "test": "node test/plan.test.js && node test/edge.test.js"
   },
   "devDependencies": {
     "electron": "44.4.3",

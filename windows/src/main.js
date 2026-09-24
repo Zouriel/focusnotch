@@ -17,6 +17,7 @@ const {
 const { Config } = require('./lib/config');
 const { Session } = require('./lib/session');
 const { Music } = require('./lib/music');
+const { EdgeWatcher, inTopEdge } = require('./lib/edge');
 
 const ASSETS = path.join(__dirname, '..', 'assets');
 
@@ -34,7 +35,8 @@ let tray = null;
 // stays yours.
 let notchRect = null;
 let hidden = false;
-let revealTimer = null;
+let userHidden = false;
+let edge = null;
 let cursorTimer = null;
 let interactive = false;
 
@@ -65,6 +67,7 @@ function main() {
 
   config.on('changed', () => {
     applyAutostart();
+    startCursorWatch();
     broadcast();
   });
   config.on('playlist', broadcast);
@@ -174,40 +177,47 @@ function repositionWindows() {
  * The gesture: the cursor reaching the absolute top row of the screen, within
  * the notch's own span, means "get out of my way".
  *
+ * Off by default. On Linux it exists so caelestia's top drawer can come down;
+ * Windows has nothing at the top edge to yield to, so a notch that vanishes is
+ * just a notch you lost. Turn it on with "hideOnTopEdge": true.
+ *
  * The notch window never claims those pixels -- it is click-through -- so this
  * reads the cursor from the OS rather than relying on an input region.
  */
 function startCursorWatch() {
-  const period = Math.max(30, config.get('cursorPollMs', 70));
   clearInterval(cursorTimer);
+  cursorTimer = null;
+
+  if (!config.get('hideOnTopEdge', false)) {
+    // Dropping the watcher also drops its opinion, so anything it was hiding
+    // comes straight back rather than being stranded off screen.
+    edge = null;
+    applyHidden();
+    return;
+  }
+
+  edge = new EdgeWatcher({ revealDelayMs: config.get('revealDelayMs', 150) });
+  const period = Math.max(30, config.get('cursorPollMs', 70));
+  const band = Math.max(2, config.get('topTriggerPx', 3));
+
   cursorTimer = setInterval(() => {
     if (!notchRect) return;
-    const p = screen.getCursorScreenPoint();
-    const band = Math.max(2, config.get('topTriggerPx', 3));
-    const d = primary();
-
-    const inTrigger =
-      p.y <= d.bounds.y + band &&
-      p.y >= d.bounds.y - 1 &&
-      p.x >= notchRect.x &&
-      p.x <= notchRect.x + notchRect.width;
-
-    if (inTrigger) {
-      clearTimeout(revealTimer);
-      setHidden(true);
-    } else if (hidden) {
-      clearTimeout(revealTimer);
-      revealTimer = setTimeout(() => setHidden(false), config.get('revealDelayMs', 150));
-    }
+    const changed = edge.update(
+      inTopEdge(screen.getCursorScreenPoint(), primary().bounds, notchRect, band)
+    );
+    if (changed) applyHidden();
   }, period);
 }
 
-function setHidden(next) {
+/** Hidden if the gesture says so, or if you asked for it from the tray. */
+function applyHidden() {
+  const next = userHidden || !!edge?.hidden;
   if (hidden === next) return;
   hidden = next;
   // While hidden the notch must not swallow clicks meant for what is beneath.
   if (hidden) setInteractive(false);
   notchWin?.webContents.send('hidden', hidden);
+  refreshTray();
 }
 
 function setInteractive(next) {
@@ -348,6 +358,15 @@ function refreshTray() {
       type: 'checkbox',
       checked: music.enabled,
       click: (i) => setMusicEnabled(i.checked),
+    },
+    {
+      label: 'Hide the notch',
+      type: 'checkbox',
+      checked: userHidden,
+      click: (i) => {
+        userHidden = i.checked;
+        applyHidden();
+      },
     },
     { type: 'separator' },
     { label: 'Preview break screen', click: () => session.preview('break') },

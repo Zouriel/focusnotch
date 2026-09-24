@@ -29,6 +29,9 @@ const DEFAULTS = {
 
   musicVolume: 45,
 
+  // Off by default: on Linux the notch hides so caelestia's top drawer can come
+  // down, but Windows has nothing at the top edge to yield to.
+  hideOnTopEdge: false,
   topTriggerPx: 3,
   revealDelayMs: 150,
   cursorPollMs: 70,
