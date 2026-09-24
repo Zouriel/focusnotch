@@ -44,11 +44,11 @@ jobs:
           node --check src/renderer/overlay.js
           node --check src/renderer/player.js
 
-      - name: Verify the break plan
-        # The one piece of real logic worth guarding: a break must never land
-        # at the start or end of a session, and the duration you pick must
-        # stay focus time.
-        run: node test/plan.test.js
+      - name: Run tests
+        # The break plan (a break must never land at the start or end of a
+        # session) and the top-edge gesture (once hidden it must always come
+        # back -- that one shipped broken in 1.0.0).
+        run: npm test
 
       - name: Build
         run: npx electron-builder --win --publish never
