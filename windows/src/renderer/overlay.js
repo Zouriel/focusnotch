@@ -13,6 +13,8 @@ const el = {
   card: document.getElementById('card'),
 };
 
+applyIcons();
+
 const fmt = (secs) => {
   const s = Math.max(0, secs);
   const m = Math.floor(s / 60);
@@ -32,7 +34,7 @@ window.notchApi.onState((s) => {
   el.scrim.classList.toggle('greeting', greeting);
   el.scrim.classList.toggle('shown', s.showBreakScreen);
 
-  el.icon.textContent = greeting ? 'resume' : 'local_cafe';
+  setIcon(el.icon, greeting ? 'resume' : 'local_cafe');
   el.title.textContent = greeting ? 'Back to it' : 'Break time';
 
   if (greeting) {

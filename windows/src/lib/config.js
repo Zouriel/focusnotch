@@ -37,6 +37,9 @@ const DEFAULTS = {
   cursorPollMs: 70,
 
   startWithWindows: false,
+  // Keep the notch above other windows. Off drops it to an ordinary window,
+  // so anything you focus covers it.
+  alwaysOnTop: true,
 
   colours: {},
 };

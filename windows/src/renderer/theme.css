@@ -34,10 +34,22 @@ body {
   cursor: default;
 }
 
-/* Icons come from the font when present, and degrade to nothing rather than
-   to tofu boxes if it is missing. */
+/* Icons come from a subset of Material Symbols bundled with the app. Relying
+   on an installed font was the bug: on a stock Windows box the family is
+   absent, and the ligature names rendered as the literal words. Glyphs are
+   addressed by codepoint (see icons.js), so a missing font costs one blank
+   box rather than a paragraph. */
+@font-face {
+  font-family: "Focus Notch Icons";
+  src: url("../../assets/fonts/icons.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  /* Draw nothing until it is ready rather than flashing fallback text. */
+  font-display: block;
+}
+
 .icon {
-  font-family: "Material Symbols Rounded", "Segoe Fluent Icons", "Segoe MDL2 Assets";
+  font-family: "Focus Notch Icons";
   font-weight: normal;
   font-style: normal;
   line-height: 1;

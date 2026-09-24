@@ -38,6 +38,10 @@ pause, breaks, music, the config folder and quit.
   in the very top row, within the notch's own width, slides it away until you
   move off.
 - **Hide the notch** from the tray menu when you want it gone for a while.
+- **Stay on top of apps** in the tray controls whether the notch floats above
+  other windows. Turn it off and it behaves like an ordinary window, so
+  whatever you focus covers it. The break screen stays on top either way -
+  interrupting is the entire point of it.
 - **Breaks** split long sessions into work blocks. The duration you pick is
   focus time: 60 means 60 minutes of work, with breaks added on top. A break
   takes over the screen so you actually notice it; click anywhere to dismiss.
@@ -70,6 +74,7 @@ as the Linux build, minus the ones that only mean something on Wayland. See the
 | Key | Default | |
 | --- | --- | --- |
 | `startWithWindows` | `false` | also togglable from the tray |
+| `alwaysOnTop` | `true` | float above other windows; also in the tray |
 | `hideOnTopEdge` | `false` | opt in to the top-edge hide gesture |
 | `cursorPollMs` | `70` | how often the gesture is checked, when enabled |
 
@@ -88,6 +93,18 @@ generator the Linux build uses, so the two platforms never drift apart.
 
 `npm start` works on Linux and macOS too, which is how the UI is developed —
 only the Windows window behaviour needs Windows.
+
+## Third-party
+
+The icons are a 3.3 KB subset of [Material Symbols
+Rounded](https://github.com/google/material-design-icons) (Apache-2.0),
+bundled in `assets/fonts/` with its licence. Bundled rather than required,
+because the family is not on a stock Windows box - which is exactly what broke
+in 1.0.1, where the ligature names rendered as the literal words and stretched
+the buttons into paragraphs. Glyphs are addressed by codepoint now, so a font
+that failed to load would cost one blank box rather than a sentence.
+`npm run icons` rebuilds it; `npm test` fails if a renderer asks for an icon
+the bundle does not contain.
 
 ## Known limitations
 

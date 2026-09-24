@@ -67,6 +67,7 @@ function main() {
 
   config.on('changed', () => {
     applyAutostart();
+    applyAlwaysOnTop();
     startCursorWatch();
     broadcast();
   });
@@ -116,7 +117,7 @@ function createWindows() {
     alwaysOnTop: true,
     webPreferences: { preload: path.join(__dirname, 'preload.js') },
   });
-  notchWin.setAlwaysOnTop(true, 'screen-saver');
+  applyAlwaysOnTop();
   notchWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   notchWin.setIgnoreMouseEvents(true, { forward: true });
   notchWin.loadFile(path.join(__dirname, 'renderer', 'notch.html'));
@@ -151,6 +152,19 @@ function createWindows() {
   screen.on('display-metrics-changed', repositionWindows);
   screen.on('display-added', repositionWindows);
   screen.on('display-removed', repositionWindows);
+}
+
+/**
+ * Whether the notch floats above other windows.
+ *
+ * The break screen is deliberately left on top either way: its whole job is
+ * to interrupt, and a break you cannot see is the bug it was added to fix.
+ */
+function applyAlwaysOnTop() {
+  if (!notchWin || notchWin.isDestroyed()) return;
+  const on = config.get('alwaysOnTop', true);
+  if (on) notchWin.setAlwaysOnTop(true, 'screen-saver');
+  else notchWin.setAlwaysOnTop(false);
 }
 
 function displayBounds(d) {
@@ -358,6 +372,16 @@ function refreshTray() {
       type: 'checkbox',
       checked: music.enabled,
       click: (i) => setMusicEnabled(i.checked),
+    },
+    {
+      label: 'Stay on top of apps',
+      type: 'checkbox',
+      checked: config.get('alwaysOnTop', true),
+      click: (i) => {
+        config.values.alwaysOnTop = i.checked;
+        applyAlwaysOnTop();
+        refreshTray();
+      },
     },
     {
       label: 'Hide the notch',

@@ -155,13 +155,10 @@ function render(s) {
   el.notch.classList.toggle('playing', s.music.playing && !s.music.paused);
   el.notch.classList.toggle('multi', s.blocks > 1);
 
-  el.phaseIcon.textContent = s.finished
-    ? 'timer_off'
-    : s.onBreak
-      ? 'local_cafe'
-      : s.running
-        ? 'hourglass_bottom'
-        : 'pause';
+  setIcon(
+    el.phaseIcon,
+    s.finished ? 'timer_off' : s.onBreak ? 'local_cafe' : s.running ? 'hourglass_bottom' : 'pause'
+  );
   el.countdown.textContent = s.finished ? 'done' : fmt(s.remaining);
   el.blocks.textContent = `${s.block}/${s.blocks}`;
 
@@ -178,7 +175,7 @@ function render(s) {
     el.plan.textContent = '';
   }
 
-  el.startIcon.textContent = s.running ? 'pause' : 'play_arrow';
+  setIcon(el.startIcon, s.running ? 'pause' : 'play_arrow');
   el.startLabel.textContent = s.running ? 'Pause' : s.active ? 'Resume' : 'Start';
   el.startBtn.classList.toggle('primary', !s.running);
   el.resetBtn.disabled = !(s.active || s.finished);
@@ -187,7 +184,7 @@ function render(s) {
   const m = s.music;
   el.musicBtn.classList.toggle('on', m.enabled && m.usable);
   el.musicBtn.classList.toggle('unavailable', !m.usable);
-  el.musicBox.textContent = m.enabled && m.usable ? 'check_box' : 'check_box_outline_blank';
+  setIcon(el.musicBox, m.enabled && m.usable ? 'check_box' : 'check_box_outline_blank');
   el.musicLabel.textContent = !m.usable
     ? 'Music (add links)'
     : m.playing && m.title
@@ -228,6 +225,7 @@ window.notchApi.onCue(({ file, volume }) => {
   a.play().catch((err) => console.warn('cue failed:', err.message));
 });
 
+applyIcons();
 tickClock();
 setInterval(tickClock, 1000);
 window.addEventListener('resize', reportRect);
