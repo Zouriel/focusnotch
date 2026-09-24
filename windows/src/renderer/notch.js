@@ -121,7 +121,10 @@ function renderChips(s) {
   br.className = 'chip breaks' + (s.breaks && eligible ? ' selected' : '');
   br.disabled = !eligible;
   br.title = eligible ? 'Breaks' : `Breaks apply from ${Math.round(s.breakMinSession / 60)} minutes`;
-  br.innerHTML = '<span class="icon">local_cafe</span>';
+  const glyph = document.createElement('span');
+  glyph.className = 'icon';
+  setIcon(glyph, 'local_cafe');
+  br.append(glyph);
   br.addEventListener('click', () => window.notchApi.action('breaks', !s.breaks));
   el.chips.append(br);
 }

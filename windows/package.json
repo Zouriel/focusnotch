@@ -1,7 +1,7 @@
 {
   "name": "focusnotch",
   "productName": "Focus Notch",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A MacBook-style notch for Windows: clock, focus timer, breaks and background music.",
   "main": "src/main.js",
   "author": "Zouriel",

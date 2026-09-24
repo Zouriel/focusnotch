@@ -39,9 +39,39 @@ for (const file of fs.readdirSync(RENDERER)) {
   for (const m of text.matchAll(/setIcon\([^,]+,\s*([^)]+)\)/g)) {
     for (const lit of m[1].matchAll(/'([^']+)'/g)) used.set(lit[1], file);
   }
-  // Nothing should still be assigning a bare ligature name as text.
-  for (const m of text.matchAll(/\.textContent\s*=\s*'([a-z]+_[a-z_]+)'/g)) {
-    assert.fail(`${file}: '${m[1]}' assigned as text; use setIcon() so it works without the system font`);
+
+  // Structural rules, rather than a list of the ways it has gone wrong so far.
+  // The first version of this test only knew about textContent, so an icon
+  // built with innerHTML sailed straight past it and shipped.
+  if (file.endsWith('.js')) {
+    // Icons in script must go through setIcon(); markup built by hand there
+    // is how a ligature name slipped back in.
+    for (const m of text.matchAll(/class=\\?["'][^"']*\bicon\b/g)) {
+      const line = text.slice(0, m.index).split('\n').length;
+      assert.fail(
+        `${file}:${line}: icon markup built in JS; use setIcon(el, name) instead ` +
+          `so the glyph comes from the bundled font`
+      );
+    }
+    for (const m of text.matchAll(/\.textContent\s*=\s*'([a-z]+_[a-z_]+)'/g)) {
+      assert.fail(`${file}: '${m[1]}' assigned as text; use setIcon() so it works without the system font`);
+    }
+  } else {
+    // In markup, an icon span carries data-icon and is otherwise empty. Any
+    // text inside one is a ligature name waiting to be rendered literally.
+    for (const m of text.matchAll(/<span[^>]*class="[^"]*\bicon\b[^"]*"[^>]*>([^<]*)<\/span>/g)) {
+      const inner = m[1].trim();
+      const line = text.slice(0, m.index).split('\n').length;
+      assert.strictEqual(
+        inner,
+        '',
+        `${file}:${line}: icon span contains "${inner}"; it should be empty with data-icon="${inner}"`
+      );
+      assert.ok(
+        /data-icon="/.test(m[0]),
+        `${file}:${line}: icon span has no data-icon, so it will draw nothing`
+      );
+    }
   }
 }
 
