@@ -9,6 +9,9 @@
   --on-accent: #0e3252;
   --break: #ecbf80;
   --on-break: #442b00;
+  /* End of session. Loud on purpose: the chime alone went unnoticed. */
+  --alert: #ff6b6b;
+  --on-alert: #4a0b0b;
   --chip: rgba(255, 255, 255, 0.07);
   --chip-hover: rgba(255, 255, 255, 0.13);
 

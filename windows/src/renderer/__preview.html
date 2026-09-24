@@ -1,0 +1,43 @@
+<!doctype html>
+<!--
+  Dev harness: renders the overlay cards with a stubbed bridge so they can be
+  screenshotted without a desktop session.
+
+      npm run preview:cards
+
+  Excluded from the packaged app. Transitions are disabled because headless
+  virtual time stalls them, which makes a perfectly fine card look half faded.
+-->
+<html lang="en"><head><meta charset="utf-8"/>
+<link rel="stylesheet" href="theme.css"/><link rel="stylesheet" href="overlay.css"/>
+<style>body{background:#1d2021} *{transition:none !important}</style></head><body>
+<div class="scrim" id="scrim"><div class="card" id="card">
+  <span class="icon big" id="cardIcon" data-icon="local_cafe"></span>
+  <h1 id="title">Break time</h1><p class="sub" id="sub"></p>
+  <div class="count" id="count">00:00</div>
+  <div class="bar" id="bar"><i id="barFill"></i></div>
+  <div class="actions">
+    <button class="obtn" id="skipBtn"><span class="icon" data-icon="skip_next"></span><span>Skip break</span></button>
+    <button class="obtn" id="againBtn" hidden><span class="icon" data-icon="replay"></span><span>Start another</span></button>
+    <button class="obtn primary" id="dismissBtn"><span class="icon" data-icon="close"></span><span id="dismissLabel">Dismiss</span></button>
+  </div>
+  <p class="hint">click anywhere to dismiss</p>
+</div></div>
+<script src="icons.js"></script>
+<script>
+  // Stub the preload bridge, then feed overlay.js one real-shaped state.
+  const kind = new URLSearchParams(location.search).get('kind') || 'done';
+  let cb = null;
+  window.notchApi = { onState: (f) => (cb = f), action: () => {} };
+</script>
+<script src="overlay.js"></script>
+<script>
+  cb({
+    config: { scale: 1, dimOpacity: 0.6, colours: {} },
+    overlayKind: kind, showOverlay: true, previewing: false,
+    minutes: 60, remaining: 174, phase: 1, block: 1, blocks: 3,
+    plan: [{kind:'work',secs:1200},{kind:'break',secs:300},{kind:'work',secs:1200}],
+  });
+  document.documentElement.classList.add('ready');
+</script>
+</body></html>

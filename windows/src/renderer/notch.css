@@ -30,8 +30,20 @@
 }
 
 .notch.finished {
-  border-color: var(--accent);
-  animation: pulse 1.8s ease-in-out infinite;
+  border-color: var(--alert);
+  animation: alert-flash 1.6s ease-in-out infinite;
+}
+
+@keyframes alert-flash {
+  0%, 100% { border-color: var(--alert); background: var(--notch-bg); }
+  50% {
+    border-color: color-mix(in srgb, var(--alert) 50%, transparent);
+    background: color-mix(in srgb, var(--alert) 16%, var(--notch-bg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notch.finished { animation: none; }
 }
 
 @keyframes pulse {
@@ -63,6 +75,11 @@
 .notch.on-break .countdown,
 .notch.on-break .phase-icon {
   color: var(--break);
+}
+
+.notch.finished .countdown,
+.notch.finished .phase-icon {
+  color: var(--alert);
 }
 
 .sep { color: var(--faint); font-size: calc(15px * var(--scale)); }

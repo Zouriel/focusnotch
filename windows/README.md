@@ -42,6 +42,9 @@ pause, breaks, music, the config folder and quit.
   other windows. Turn it off and it behaves like an ordinary window, so
   whatever you focus covers it. The break screen stays on top either way -
   interrupting is the entire point of it.
+- **When the time is up** the screen takes over with a red, slowly pulsing
+  card, and the chime repeats. A single soft ding and a small glow on the
+  notch were easy to work straight through.
 - **Breaks** split long sessions into work blocks. The duration you pick is
   focus time: 60 means 60 minutes of work, with breaks added on top. A break
   takes over the screen so you actually notice it; click anywhere to dismiss.
@@ -90,6 +93,11 @@ npm run dist       # build the exe into dist/
 The three cue sounds are committed so a fresh clone just runs, but they are
 generated: `npm run cues` rebuilds them from `config/gen-alarm.py`, the same
 generator the Linux build uses, so the two platforms never drift apart.
+
+`npm test` covers the break plan, the top-edge gesture, which card the overlay
+shows, and that every icon a renderer asks for is in the bundled font.
+`npm run preview:cards` screenshots the three overlay cards headlessly, which
+is how they are checked without a desktop session.
 
 `npm start` works on Linux and macOS too, which is how the UI is developed —
 only the Windows window behaviour needs Windows.

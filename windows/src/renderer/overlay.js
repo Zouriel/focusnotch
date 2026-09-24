@@ -9,6 +9,7 @@ const el = {
   barFill: document.getElementById('barFill'),
   skipBtn: document.getElementById('skipBtn'),
   dismissBtn: document.getElementById('dismissBtn'),
+  againBtn: document.getElementById('againBtn'),
   dismissLabel: document.getElementById('dismissLabel'),
   card: document.getElementById('card'),
 };
@@ -30,28 +31,38 @@ window.notchApi.onState((s) => {
     root.style.setProperty(`--${k}`, v);
   }
 
-  const greeting = s.backToWork;
-  el.scrim.classList.toggle('greeting', greeting);
-  el.scrim.classList.toggle('shown', s.showBreakScreen);
+  const kind = s.overlayKind; // 'break' | 'back' | 'done' | null
+  const preview = s.previewing;
 
-  setIcon(el.icon, greeting ? 'resume' : 'local_cafe');
-  el.title.textContent = greeting ? 'Back to it' : 'Break time';
+  el.scrim.classList.toggle('shown', s.showOverlay);
+  el.scrim.classList.toggle('greeting', kind === 'back');
+  el.scrim.classList.toggle('done', kind === 'done');
 
-  if (greeting) {
+  if (kind === 'done') {
+    setIcon(el.icon, 'timer_off');
+    el.title.textContent = "Time's up";
+    const mins = s.minutes;
+    el.sub.textContent = `${mins} minute${mins === 1 ? '' : 's'} of focus finished.`;
+  } else if (kind === 'back') {
+    setIcon(el.icon, 'resume');
+    el.title.textContent = 'Back to it';
     const mins = Math.round((s.plan[s.phase]?.secs ?? 0) / 60);
     el.sub.textContent = `Block ${s.block} of ${s.blocks} · ${mins} minute${mins === 1 ? '' : 's'}`;
-  } else if (s.previewing) {
-    el.sub.textContent = 'This is what a break looks like.';
   } else {
-    el.sub.textContent = `Block ${s.block} of ${s.blocks} done. Step away from the screen.`;
+    setIcon(el.icon, 'local_cafe');
+    el.title.textContent = 'Break time';
+    el.sub.textContent = preview
+      ? 'This is what a break looks like.'
+      : `Block ${s.block} of ${s.blocks} done. Step away from the screen.`;
   }
 
   const total = s.plan[s.phase]?.secs ?? 0;
-  el.count.textContent = s.previewing ? '05:00' : fmt(s.remaining);
-  el.barFill.style.width = `${s.previewing || total <= 0 ? 100 : (s.remaining / total) * 100}%`;
+  el.count.textContent = preview ? '05:00' : fmt(s.remaining);
+  el.barFill.style.width = `${preview || total <= 0 ? 100 : (s.remaining / total) * 100}%`;
 
-  el.skipBtn.hidden = greeting || s.previewing;
-  el.dismissLabel.textContent = greeting ? 'Got it' : 'Dismiss';
+  el.skipBtn.hidden = kind !== 'break' || preview;
+  el.againBtn.hidden = kind !== 'done';
+  el.dismissLabel.textContent = kind === 'back' ? 'Got it' : kind === 'done' ? 'Done' : 'Dismiss';
 });
 
 // Clicking the scrim dismisses; clicking the card must not.
@@ -59,6 +70,7 @@ el.scrim.addEventListener('click', () => window.notchApi.action('dismissBreak'))
 el.card.addEventListener('click', (e) => e.stopPropagation());
 
 el.skipBtn.addEventListener('click', () => window.notchApi.action('skip'));
+el.againBtn.addEventListener('click', () => window.notchApi.action('restart'));
 el.dismissBtn.addEventListener('click', () => window.notchApi.action('dismissBreak'));
 
 window.addEventListener('keydown', (e) => {

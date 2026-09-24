@@ -72,7 +72,37 @@ h1 {
 }
 
 .scrim.greeting .count,
-.scrim.greeting .bar { display: none; }
+.scrim.greeting .bar,
+.scrim.done .count,
+.scrim.done .bar { display: none; }
+
+/* ---- end of session ----
+   A slow pulse, deliberately about 0.6Hz: fast enough to pull the eye across
+   the room, far below the ~3Hz where flashing becomes a seizure risk. */
+.scrim.done .card {
+  border-color: var(--alert);
+  animation: alert-pulse 1.6s ease-in-out infinite;
+}
+
+.scrim.done .big { color: var(--alert); }
+.scrim.done h1 { color: var(--alert); }
+.scrim.done .obtn.primary { background: var(--alert); color: var(--on-alert); }
+
+@keyframes alert-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--alert) 45%, transparent);
+    border-color: var(--alert);
+  }
+  50% {
+    box-shadow: 0 0 calc(60px * var(--scale)) calc(6px * var(--scale))
+      color-mix(in srgb, var(--alert) 30%, transparent);
+    border-color: color-mix(in srgb, var(--alert) 55%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrim.done .card { animation: none; }
+}
 
 .actions {
   margin-top: calc(22px * var(--scale));

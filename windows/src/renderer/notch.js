@@ -222,10 +222,16 @@ el.musicBtn.addEventListener('click', () => {
 
 window.notchApi.onState(render);
 window.notchApi.onHidden((h) => el.notch.classList.toggle('hidden', h));
-window.notchApi.onCue(({ file, volume }) => {
-  const a = new Audio(`file://${file.replace(/\\/g, '/')}`);
-  a.volume = Math.min(1, Math.max(0, volume));
-  a.play().catch((err) => console.warn('cue failed:', err.message));
+window.notchApi.onCue(({ file, volume, repeats = 1, gapMs = 1300 }) => {
+  const src = `file://${file.replace(/\\/g, '/')}`;
+  const vol = Math.min(1, Math.max(0, volume));
+  for (let i = 0; i < Math.max(1, repeats); i++) {
+    setTimeout(() => {
+      const a = new Audio(src);
+      a.volume = vol;
+      a.play().catch((err) => console.warn('cue failed:', err.message));
+    }, i * gapMs);
+  }
 });
 
 applyIcons();

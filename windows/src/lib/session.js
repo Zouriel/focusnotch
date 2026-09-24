@@ -38,7 +38,8 @@ class Session extends EventEmitter {
     // running: it is a nudge, not a cage.
     this.breakDismissed = false;
     this.backToWork = false;
-    this.previewing = false;
+    this.finishedDismissed = false;
+    this.previewKind = null;
 
     this._backToWorkTimer = null;
     this._previewTimer = null;
@@ -103,10 +104,24 @@ class Session extends EventEmitter {
     return this.planTotal > 0 ? this.planElapsed / this.planTotal : 0;
   }
 
-  get showBreakScreen() {
-    const cfg = this.config.get('breakOverlay', {});
-    if (cfg.enabled === false) return false;
-    return this.previewing || this.backToWork || (this.onBreak && !this.breakDismissed);
+  /**
+   * Which full-screen card to show, if any: 'break', 'back' or 'done'.
+   *
+   * The end of a session gets one too. It used to be a chime and a small
+   * glow on the notch, which is less than a break got -- backwards, for the
+   * thing you were actually waiting for.
+   */
+  get overlayKind() {
+    if (this.config.get('breakOverlay', {}).enabled === false) return null;
+    if (this.previewKind) return this.previewKind;
+    if (this.finished && !this.finishedDismissed) return 'done';
+    if (this.backToWork) return 'back';
+    if (this.onBreak && !this.breakDismissed) return 'break';
+    return null;
+  }
+
+  get showOverlay() {
+    return this.overlayKind !== null;
   }
 
   // ---- the plan ------------------------------------------------------------
@@ -177,7 +192,7 @@ class Session extends EventEmitter {
 
   reset() {
     this.running = false;
-    this.dismissBreakScreen();
+    this.dismissOverlay();
     this.rebuild();
     this.emit('reset');
   }
@@ -210,34 +225,39 @@ class Session extends EventEmitter {
     if (!this.running) this.start();
   }
 
-  dismissBreakScreen() {
+  /** Send whichever card is up away, without changing the session itself. */
+  dismissOverlay() {
     this.breakDismissed = true;
+    this.finishedDismissed = true;
     this.backToWork = false;
-    this.previewing = false;
+    this.previewKind = null;
     clearTimeout(this._backToWorkTimer);
     clearTimeout(this._previewTimer);
     this.emit('changed');
   }
 
+  /** Show a card without waiting for the real thing: 'break', 'back', 'done'. */
   preview(kind = 'break') {
-    if (kind === 'back') {
-      this.backToWork = true;
-      this._armBackToWork();
-    } else {
-      this.previewing = true;
-      clearTimeout(this._previewTimer);
-      this._previewTimer = setTimeout(() => {
-        this.previewing = false;
-        this.emit('changed');
-      }, 8000);
-    }
+    this.previewKind = ['break', 'back', 'done'].includes(kind) ? kind : 'break';
+    clearTimeout(this._previewTimer);
+    this._previewTimer = setTimeout(() => {
+      this.previewKind = null;
+      this.emit('changed');
+    }, 8000);
     this.emit('changed');
   }
 
   dismissFinished() {
     this.finished = false;
+    this.finishedDismissed = true;
     this.backToWork = false;
     this.rebuild();
+  }
+
+  /** Dismiss the "time's up" card and run the same session again. */
+  restart() {
+    this.reset();
+    this.start();
   }
 
   // ---- the clock -----------------------------------------------------------
@@ -285,6 +305,7 @@ class Session extends EventEmitter {
     this.running = false;
     this.remaining = 0;
     this.finished = true;
+    this.finishedDismissed = false;
     this.backToWork = false;
     clearTimeout(this._backToWorkTimer);
 
@@ -325,9 +346,9 @@ class Session extends EventEmitter {
       phase: this.phase,
       active: this.active,
       progress: this.progress,
-      showBreakScreen: this.showBreakScreen,
-      backToWork: this.backToWork && !this.onBreak,
-      previewing: this.previewing,
+      overlayKind: this.overlayKind,
+      showOverlay: this.showOverlay,
+      previewing: this.previewKind !== null,
       breakDismissed: this.breakDismissed,
     };
   }

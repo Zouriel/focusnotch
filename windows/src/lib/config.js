@@ -25,6 +25,8 @@ const DEFAULTS = {
   breakOverlay: { enabled: true, dimOpacity: 0.6, backToWorkSeconds: 6 },
 
   alarmVolume: 0.55,
+  // The end of a session repeats; break cues always play once.
+  alarmRepeats: 3,
   notify: true,
 
   musicVolume: 45,

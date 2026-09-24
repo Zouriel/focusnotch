@@ -267,7 +267,9 @@ function wireSession() {
     notify('Back to it', `Block ${block} of ${blocks}.`);
   });
   session.on('completed', ({ minutes }) => {
-    cue('alarm.wav');
+    // Breaks get one soft chime; the end of a session repeats, because a
+    // single one went unnoticed.
+    cue('alarm.wav', Math.max(1, config.get('alarmRepeats', 3)));
     notify('Focus session done', `${minutes} minute${minutes === 1 ? '' : 's'} of focus finished.`);
     music.fadeStop();
   });
@@ -294,7 +296,7 @@ function broadcast() {
   notchWin?.webContents.send('state', state);
   overlayWin?.webContents.send('state', state);
 
-  const wantOverlay = state.showBreakScreen;
+  const wantOverlay = state.showOverlay;
   if (overlayWin && !overlayWin.isDestroyed()) {
     if (wantOverlay && !overlayWin.isVisible()) {
       overlayWin.setBounds(displayBounds(primary()));
@@ -303,7 +305,7 @@ function broadcast() {
     } else if (!wantOverlay && overlayWin.isVisible()) {
       // Let the fade finish before the window goes.
       setTimeout(() => {
-        if (!session.showBreakScreen && overlayWin && !overlayWin.isDestroyed()) overlayWin.hide();
+        if (!session.showOverlay && overlayWin && !overlayWin.isDestroyed()) overlayWin.hide();
       }, 280);
     }
   }
@@ -327,10 +329,12 @@ function restoreState() {
 
 // ---------------------------------------------------------------- cues -----
 
-function cue(file) {
+function cue(file, repeats = 1) {
   notchWin?.webContents.send('cue', {
     file: path.join(ASSETS, file),
     volume: config.get('alarmVolume', 0.55),
+    repeats,
+    gapMs: 1300,
   });
 }
 
@@ -394,6 +398,7 @@ function refreshTray() {
     },
     { type: 'separator' },
     { label: 'Preview break screen', click: () => session.preview('break') },
+    { label: "Preview time's-up screen", click: () => session.preview('done') },
     { label: 'Edit playlist', click: () => shell.openPath(config.musicPath) },
     { label: 'Open config folder', click: () => shell.openPath(config.dir) },
     { type: 'separator' },
@@ -485,7 +490,10 @@ ipcMain.on('action', (_e, { type, value }) => {
       shell.openPath(config.musicPath);
       break;
     case 'dismissBreak':
-      session.dismissBreakScreen();
+      session.dismissOverlay();
+      break;
+    case 'restart':
+      session.restart();
       break;
     case 'dismissFinished':
       session.dismissFinished();
@@ -536,7 +544,7 @@ async function captureAndExit(dir) {
     await wait(900);
     await shot(overlayWin, 'break-screen');
 
-    session.dismissBreakScreen();
+    session.dismissOverlay();
     session.preview('back');
     await wait(900);
     await shot(overlayWin, 'back-to-work');
